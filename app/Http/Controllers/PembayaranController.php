@@ -7,6 +7,7 @@ use App\Models\Siswa;
 use PDF;
 use App\Models\Pembayaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 
 class PembayaranController extends Controller
@@ -52,19 +53,27 @@ class PembayaranController extends Controller
         \Midtrans\Config::$is3ds = true;
 
         // https://app.sandbox.midtrans.com/snap/v2/vtweb/INI-SNAP-TOKEN
-        // $siswa = Siswa::where('nisn', $pembayaran->siswa_id)->get('nama')->all();
-        $amount = Spp::where('id', $pembayaran->spp_id)->get('nominal')->first();
+
+        $amount = DB::table('spps')
+            ->where('id', $pembayaran->spp_id)
+            ->first();
+
+        $siswa = DB::table('siswas')
+            ->where('nisn', $pembayaran->siswa_id)
+            ->first();
+
         $params = array(
             'transaction_details' => array(
-                'order_id' => $pembayaran->siswa_id,
-                'gross_amount' => 1000,
+                'order_id' => $siswa->nisn,
+                'gross_amount' => $amount->nominal,
             ),
 
             'customer_details' => array(
-                'name' => Siswa::where('nisn', $pembayaran->siswa_id)->get('nama')->first(),
-                'last_name' => 'pratama',
-                'email' => 'budi.pra@example.com',
-                'phone' => Siswa::where('nisn', $pembayaran->siswa_id)->get('no_telepon')->first(),
+                'first_name' => $siswa->nama,
+                // 'last_name' => 'pratama',
+                // 'email' => 'budi.pra@example.com',
+                'address' => $siswa->alamat,
+                'phone' => $siswa->no_telepon,
             ),
         );
 
